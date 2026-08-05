@@ -1,0 +1,9 @@
+-------------------------------------------------------------------------------
+Test set: testrunner.RunCucumberTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.130 s <<< FAILURE! -- in testrunner.RunCucumberTest
+Nmap Port Specification Scanning.Scanning a valid port range -- Time elapsed: 0.192 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected output to reference the 1024 scanned ports in the range ==> expected: <true> but was: <false>
+	at stepdefinitions.PortScanSteps.nmap_scans_range_1_to_1024(PortScanSteps.java:33)
+	at ✽.Nmap scans every port from 1 through 1024 and reports each port's state(classpath:features/PortScan.feature:11)
+
