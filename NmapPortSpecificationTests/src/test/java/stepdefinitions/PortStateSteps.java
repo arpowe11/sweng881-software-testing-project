@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import support.NmapOutputParser;
 import support.NmapPortResult;
 import support.TcpTestServer;
+import support.PythonHttpTestServer;
 import system.NmapScanner;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class PortStateSteps {
 
     private NmapScanner scanner = new NmapScanner();
     private TcpTestServer tcpServer;
+    private PythonHttpTestServer pythonHttpServer;
 
     private String targetHost;
     private int selectedPort;
@@ -102,13 +104,11 @@ public class PortStateSteps {
 
     @Given("a reachable target with an identifiable TCP service listening on the selected port")
     public void identifiableTcpServiceIsListening() throws IOException {
-        // Nmap recognizes an SSH protocol identification string even on a
-        // non-standard dynamically assigned port. This gives -sV a stable,
-        // local service/version fixture without requiring another program.
-        tcpServer = TcpTestServer.withBanner(
-                "SSH-2.0-OpenSSH_9.6p1 SWENG881-test\r\n");
-        targetHost = tcpServer.getHost();
-        selectedPort = tcpServer.getPort();
+
+        pythonHttpServer = PythonHttpTestServer.start();
+
+        targetHost = pythonHttpServer.getHost();
+        selectedPort = pythonHttpServer.getPort();
         selectedProtocol = "tcp";
     }
 
@@ -133,7 +133,10 @@ public class PortStateSteps {
 
     @When("the selected port is scanned using TCP connect and version detection")
     public void scanUsingTcpVersionDetection() {
-        scanner.scan("-sT -sV -Pn -p " + selectedPort, targetHost);
+        scanner.scan(
+                "-sT -sV --host-timeout 30s -Pn -p " + selectedPort,
+                targetHost
+        );
     }
 
     // ---------------------------------------------------------------------
@@ -208,5 +211,19 @@ public class PortStateSteps {
         Assertions.assertTrue(port >= 1 && port <= 65535,
                 "System property " + propertyName + " must be between 1 and 65535");
         return port;
+    }
+
+    @After
+    public void cleanup() {
+
+        if (tcpServer != null) {
+            tcpServer.close();
+            tcpServer = null;
+        }
+
+        if (pythonHttpServer != null) {
+            pythonHttpServer.close();
+            pythonHttpServer = null;
+        }
     }
 }
