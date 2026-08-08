@@ -1,0 +1,47 @@
+# Maven build output
+target/
+
+# Compiled Java output
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# JVM crash / replay logs
+hs_err_pid*
+replay_pid*
+
+# General logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Maven release/plugin temporary files
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Test/coverage tool output (if added later)
+.coverage
+coverage/
+htmlcov/
