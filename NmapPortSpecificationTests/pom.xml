@@ -12,6 +12,10 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- By default, exclude scenarios tagged @requires_root: they need a controlled
+             firewall environment and elevated privileges (see README). Override with
+             -Dcucumber.filter.tags to run them explicitly. -->
+        <cucumber.filter.tags>not @requires_root</cucumber.filter.tags>
     </properties>
 
     <dependencies>
@@ -52,4 +56,32 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <cucumber.filter.tags>${cucumber.filter.tags}</cucumber.filter.tags>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Opt-in profile for the root-only scenarios (GT-TC3/4/5). These need raw-socket
+             scans (-sS/-sU) and a controlled firewall environment. Run with:
+               sudo mvn test -Proot-scans
+        -->
+        <profile>
+            <id>root-scans</id>
+            <properties>
+                <cucumber.filter.tags>@requires_root</cucumber.filter.tags>
+            </properties>
+        </profile>
+    </profiles>
 </project>

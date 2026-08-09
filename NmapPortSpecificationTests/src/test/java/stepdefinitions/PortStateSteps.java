@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions;
 import support.NmapOutputParser;
 import support.NmapPortResult;
 import support.TcpTestServer;
-import support.PythonHttpTestServer;
 import system.NmapScanner;
 
 import java.io.IOException;
@@ -23,19 +22,10 @@ public class PortStateSteps {
 
     private NmapScanner scanner = new NmapScanner();
     private TcpTestServer tcpServer;
-    private PythonHttpTestServer pythonHttpServer;
 
     private String targetHost;
     private int selectedPort;
     private String selectedProtocol;
-
-    @After
-    public void stopLocalFixture() {
-        if (tcpServer != null) {
-            tcpServer.close();
-            tcpServer = null;
-        }
-    }
 
     // ---------------------------------------------------------------------
     // GT-TC1: OPEN
@@ -105,10 +95,10 @@ public class PortStateSteps {
     @Given("a reachable target with an identifiable TCP service listening on the selected port")
     public void identifiableTcpServiceIsListening() throws IOException {
 
-        pythonHttpServer = PythonHttpTestServer.start();
+        tcpServer = TcpTestServer.httpServer();
 
-        targetHost = pythonHttpServer.getHost();
-        selectedPort = pythonHttpServer.getPort();
+        targetHost = tcpServer.getHost();
+        selectedPort = tcpServer.getPort();
         selectedProtocol = "tcp";
     }
 
@@ -219,11 +209,6 @@ public class PortStateSteps {
         if (tcpServer != null) {
             tcpServer.close();
             tcpServer = null;
-        }
-
-        if (pythonHttpServer != null) {
-            pythonHttpServer.close();
-            pythonHttpServer = null;
         }
     }
 }

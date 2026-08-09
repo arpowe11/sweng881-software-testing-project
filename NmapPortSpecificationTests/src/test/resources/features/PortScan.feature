@@ -19,3 +19,19 @@ Feature: Nmap Port Specification Scanning
     Given a target host is reachable
     When I run Nmap with "-p 70000"
     Then Nmap rejects the command with a port-range error and does not attempt a scan
+
+  Scenario: Scanning the full port-range wildcard
+    Given a target host is reachable
+    When I run Nmap with "-p-"
+    Then Nmap completes a full-range scan without error
+
+  @requires_root
+  Scenario: Scanning a protocol-qualified mixed group
+    Given a target host is reachable
+    When I run Nmap with "-sU -sS -p U:53,T:80"
+    Then Nmap scans UDP port 53 and TCP port 80 only
+
+  Scenario: Rejecting malformed port syntax
+    Given a target host is reachable
+    When I run Nmap with "-p 22,,80"
+    Then Nmap rejects the command with a syntax error and does not attempt a scan

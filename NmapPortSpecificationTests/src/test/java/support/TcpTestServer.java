@@ -86,32 +86,7 @@ public final class TcpTestServer implements AutoCloseable {
 
             try (Socket socket = serverSocket.accept()) {
 
-                if (response != null) {
-
-                    /*
-                     * Give Nmap an opportunity to send its HTTP probe.
-                     * Some service-detection probes connect before
-                     * immediately sending data.
-                     */
-                    if (waitForRequest) {
-
-                        socket.setSoTimeout(500);
-
-                        try {
-                            byte[] buffer = new byte[4096];
-                            socket.getInputStream().read(buffer);
-                        } catch (SocketTimeoutException ignored) {
-                            /*
-                             * Nmap may perform a probe that sends no data.
-                             * Still return the HTTP banner so that service
-                             * detection can inspect it.
-                             */
-                        }
-                    }
-
-                    socket.getOutputStream().write(response);
-                    socket.getOutputStream().flush();
-                }
+                handleConnection(socket);
 
             } catch (SocketTimeoutException ignored) {
 
@@ -119,10 +94,60 @@ public final class TcpTestServer implements AutoCloseable {
 
             } catch (IOException e) {
 
-                if (running) {
+                /*
+                 * accept() itself failed. That's fatal only if the server
+                 * socket was actually closed (normal shutdown via close());
+                 * otherwise keep looping rather than killing the fixture
+                 * over a transient error.
+                 */
+                if (serverSocket.isClosed()) {
                     running = false;
                 }
             }
+        }
+    }
+
+    /**
+     * Handles a single accepted connection. Bare probes (e.g. Nmap's plain
+     * connect-scan open/close, with no data exchanged) can cause the read or
+     * write below to throw a non-timeout IOException (connection reset, EOF,
+     * broken pipe). Those are per-connection failures and must not escape to
+     * acceptLoop(), or a single bad probe would kill the fixture for every
+     * subsequent connection.
+     */
+    private void handleConnection(Socket socket) {
+
+        if (response == null) {
+            return;
+        }
+
+        try {
+            /*
+             * Give Nmap an opportunity to send its HTTP probe.
+             * Some service-detection probes connect before
+             * immediately sending data.
+             */
+            if (waitForRequest) {
+
+                socket.setSoTimeout(500);
+
+                try {
+                    byte[] buffer = new byte[4096];
+                    socket.getInputStream().read(buffer);
+                } catch (IOException ignored) {
+                    /*
+                     * Nmap may perform a probe that sends no data, or close
+                     * the connection before we finish reading. Still return
+                     * the HTTP banner so that service detection can inspect it.
+                     */
+                }
+            }
+
+            socket.getOutputStream().write(response);
+            socket.getOutputStream().flush();
+
+        } catch (IOException ignored) {
+            // Peer disconnected before/while we responded; nothing to do.
         }
     }
 

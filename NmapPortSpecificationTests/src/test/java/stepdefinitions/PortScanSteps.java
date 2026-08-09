@@ -52,4 +52,27 @@ public class PortScanSteps {
         assertTrue(scanner.getOutput().toLowerCase().contains("between 0 and 65535"),
                 "Expected a port-range error message");
     }
+
+    @Then("Nmap completes a full-range scan without error")
+    public void nmap_completes_full_range_scan() {
+        assertEquals(0, scanner.getExitCode(), "Expected a successful scan");
+        assertTrue(scanner.getOutput().contains("Nmap done"),
+                "Expected Nmap to report scan completion");
+    }
+
+    @Then("Nmap scans UDP port 53 and TCP port 80 only")
+    public void nmap_scans_protocol_qualified_group() {
+        assertEquals(0, scanner.getExitCode(),
+                "Expected a successful scan. Output:\n" + scanner.getOutput());
+        String out = scanner.getOutput();
+        assertTrue(out.contains("53/udp"), "Expected UDP port 53 in output");
+        assertTrue(out.contains("80/tcp"), "Expected TCP port 80 in output");
+    }
+
+    @Then("Nmap rejects the command with a syntax error and does not attempt a scan")
+    public void nmap_rejects_malformed_syntax() {
+        assertTrue(scanner.wasRejected(), "Expected a non-zero exit code for malformed syntax");
+        assertTrue(scanner.getOutput().toLowerCase().contains("illegal"),
+                "Expected a port-specification syntax error message");
+    }
 }
